@@ -35,11 +35,16 @@ pytest -q
 | `checkpoint/ci` | 任務 2 完成：再加 `.github/workflows/ci.yml` |
 | `checkpoint/release` | 任務 3 完成：再加協作規範（PR 範本、CODEOWNERS）與「打 tag 自動發 Release」的 workflow |
 
+建 repo 時勾 **Include all branches** 才會有這些分支。救援方式是「把那個分支的檔案整份拿過來」，不是切過去：
+
 ```bash
 git fetch origin
-git switch -c my-rescue origin/checkpoint/ci   # 從任務 2 的終點接著做
+git switch -c rescue/ci                 # 在你自己的歷史上開一個 branch
+git checkout origin/checkpoint/ci -- .  # 把 checkpoint/ci 的檔案全部拿過來
+git status                              # 看到被改／新增的檔案
+git commit -m "chore: 從 checkpoint/ci 接續"
 ```
 
-（用 Use this template 建的 repo 預設只有 `main`。要救援分支，在建立時勾 **Include all branches**。）
+> 為什麼不直接 `git switch checkpoint/ci`？用範本建出來的 repo，每個分支都是各自獨立的一個 commit，跟你的 `main` 沒有共同祖先，之後開 PR 會出現 `unrelated histories`。
 
 資料都是虛構的。
