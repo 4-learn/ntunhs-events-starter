@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"                     # 只有 v0.1.0 這種 tag 才觸發
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest -v --cov=app --cov-fail-under=80
+
+  release:
+    needs: test                       # 測試沒過，不發版
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write                 # 建 Release 需要
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 檢查 tag 和程式裡的 VERSION 一致
+        run: |
+          code_version=$(python3 -c "import re;print(re.search(r'VERSION = \"(.+?)\"', open('app/main.py').read()).group(1))")
+          echo "tag=${GITHUB_REF_NAME} code=${code_version}"
+          test "${GITHUB_REF_NAME}" = "${code_version}"
+
+      - name: 打包原始碼
+        run: git archive --format=tar.gz --prefix=events-api-${GITHUB_REF_NAME}/ -o events-api-${GITHUB_REF_NAME}.tar.gz ${GITHUB_REF_NAME}
+
+      - name: 發 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${GITHUB_REF_NAME}" events-api-${GITHUB_REF_NAME}.tar.gz --generate-notes --title "events-api ${GITHUB_REF_NAME}"
