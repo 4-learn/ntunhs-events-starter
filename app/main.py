@@ -6,7 +6,7 @@
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 VERSION = "v0.1.0"
 
@@ -20,6 +20,14 @@ class Event(BaseModel):
     event_time: datetime
     kind: str = "fall"
     score: float = Field(ge=0, le=1)
+
+    @field_validator("event_time")
+    @classmethod
+    def need_timezone(cls, v: datetime) -> datetime:
+        # 時間不能錯：沒帶時區（例如 +08:00）就擋下來
+        if v.tzinfo is None:
+            raise ValueError("event_time 必須帶時區，例如 2026-01-12T02:15:03+08:00")
+        return v
 
 
 EVENTS: dict[str, Event] = {}   # 先存在記憶體；重開就沒了（API 課再換資料庫）
