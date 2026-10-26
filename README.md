@@ -40,7 +40,7 @@ pytest -q
 ```bash
 git fetch origin
 git switch -c rescue/ci                 # 在你自己的歷史上開一個 branch
-git checkout origin/checkpoint/ci -- .  # 把 checkpoint/ci 的檔案全部拿過來
+git restore --source=origin/checkpoint/ci --staged --worktree -- .   # 把 checkpoint/ci 的檔案全部拿過來
 git status                              # 看到被改／新增的檔案
 git commit -m "chore: 從 checkpoint/ci 接續"
 ```
